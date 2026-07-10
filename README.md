@@ -13,8 +13,9 @@ plus the hub, using four plain `<a>` tags — no JavaScript, no tracking, no
 runtime dependency on this repo. Joining is a pull request: fork, add
 yourself to [`ring.json`](./ring.json), open a PR.
 
-See [`JOINING.md`](./JOINING.md) to join, [`DECISIONS.md`](./DECISIONS.md)
-for the design rationale and history.
+See [`JOINING.md`](./JOINING.md) to join, [`DESIGN.md`](./DESIGN.md) for
+the full design doc, and [`DECISIONS.md`](./DECISIONS.md) for the
+decision log and rationale history.
 
 ## How it works
 
@@ -69,6 +70,7 @@ webring/
 │   ├── CODEOWNERS
 │   └── workflows/          # deploy.yml, validate.yml, linkcheck.yml
 ├── JOINING.md
+├── DESIGN.md
 ├── DECISIONS.md
 └── CNAME
 ```
