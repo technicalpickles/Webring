@@ -14,6 +14,11 @@ concurrency:
 
 jobs:
   build:
+    # Forks get their own copy of this workflow and push events fire it in
+    # their repo too, surfacing as a check on any PR opened from that fork
+    # (checks are keyed by commit SHA, not repo). Skip outside the canonical
+    # repo so forks show green instead of failing on a missing Pages setup.
+    if: github.repository == 'technicalpickles/Webring'
     runs-on: ubuntu-latest
     permissions:
       contents: read
