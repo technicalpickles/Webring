@@ -18,7 +18,7 @@
     "check-links": "tsx src/check-links.ts"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^26.1.1",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "sharp": "^0.33.5",
