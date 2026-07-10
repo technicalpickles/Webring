@@ -44,7 +44,7 @@ Append an entry to the `members` array:
 ```
 
 - `slug`: lowercase letters, numbers, hyphens only. Used in your redirect
-  URLs (`ring.pickles.dev/{slug}/next/`).
+  URLs (`deadhtml.pickles.dev/{slug}/next/`).
 - `name`: how your site is displayed in the directory.
 - `url`: your homepage, `https://` only.
 - `owner`: your name or handle.
@@ -62,15 +62,15 @@ under `badges/` — anything else will fail CI automatically.
 ### 3. Add the snippet to your site
 
 Once merged, your redirect pages exist at
-`ring.pickles.dev/{your-slug}/next/` and `.../prev/`. Add something like
+`deadhtml.pickles.dev/{your-slug}/next/` and `.../prev/`. Add something like
 this to your homepage:
 
 ```html
 <p class="dhts">
-  <a href="https://ring.pickles.dev/yourname/prev/" aria-label="previous site in the Dead HTML Tag Society">←</a>
-  <a href="https://ring.pickles.dev/">Dead HTML Tag Society</a>
-  <a href="https://ring.pickles.dev/random/?from=yourname" aria-label="random site in the ring">🎲</a>
-  <a href="https://ring.pickles.dev/yourname/next/" aria-label="next site in the Dead HTML Tag Society">→</a>
+  <a href="https://deadhtml.pickles.dev/yourname/prev/" aria-label="previous site in the Dead HTML Tag Society">←</a>
+  <a href="https://deadhtml.pickles.dev/">Dead HTML Tag Society</a>
+  <a href="https://deadhtml.pickles.dev/random/?from=yourname" aria-label="random site in the ring">🎲</a>
+  <a href="https://deadhtml.pickles.dev/yourname/next/" aria-label="next site in the Dead HTML Tag Society">→</a>
 </p>
 ```
 
