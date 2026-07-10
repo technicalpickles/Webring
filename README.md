@@ -10,8 +10,8 @@ A webring for personal sites, in loving memory of `<blink>`.
 
 An old-school webring. Members link to a "next" and "previous" neighbor
 plus the hub, using four plain `<a>` tags — no JavaScript, no tracking, no
-runtime dependency on this repo. Joining is a pull request: fork, add
-yourself to [`ring.json`](./ring.json), open a PR.
+runtime dependency on this repo. Joining is a pull request: fork, add a
+file under [`members/`](./members), open a PR.
 
 See [`JOINING.md`](./JOINING.md) to join, [`DESIGN.md`](./DESIGN.md) for
 the full design doc, and [`DECISIONS.md`](./DECISIONS.md) for the
@@ -19,19 +19,25 @@ decision log and rationale history.
 
 ## How it works
 
-`ring.json` is the source of truth. A GitHub Actions build reads it and
+`ring.json` holds the ring's own name/URL; each member is one file under
+`members/{slug}.json` — one member per PR, so joining never conflicts with
+anyone else's join PR. A GitHub Actions build reads all of it and
 generates a fully static site:
 
 ```
-ring.json ──(build)──► dist/
-                        ├── index.html         home + directory + join snippet
-                        ├── 404.html
-                        ├── badges/*.png|gif|svg
-                        ├── random/index.html  random-site hop (the only JS in the project)
-                        └── {slug}/
-                            ├── next/index.html
-                            └── prev/index.html
+ring.json + members/*.json ──(build)──► dist/
+                                         ├── index.html         home + directory + join snippet
+                                         ├── 404.html
+                                         ├── badges/*.png|gif|svg
+                                         ├── random/index.html  random-site hop (the only JS in the project)
+                                         └── {slug}/
+                                             ├── next/index.html
+                                             └── prev/index.html
 ```
+
+Ring order (next/prev) is derived deterministically from each member's
+`joined` date (slug breaks ties on the same day) rather than stored
+anywhere, since there's no longer a single array to hold a position.
 
 Membership changes regenerate every redirect page, so the ring re-wires
 itself on every merge — members never touch their own site again after
@@ -43,7 +49,7 @@ Requires Node 22+.
 
 ```sh
 npm install
-npm run build      # ring.json + templates → dist/
+npm run build      # ring.json + members/*.json + templates → dist/
 npm run dev        # build + serve dist/ locally
 npm test           # vitest
 npm run validate   # schema/charset/tag/badge/reachability checks (what CI runs on PRs)
@@ -53,12 +59,14 @@ npm run validate   # schema/charset/tag/badge/reachability checks (what CI runs 
 
 ```
 webring/
-├── ring.json               # source of truth: ring name + members
-├── ring.schema.json        # JSON Schema for ring.json
+├── ring.json               # ring name + url (maintainer-owned)
+├── ring.schema.json        # JSON Schema for the assembled ring
 ├── dead-tags.json          # curated list of adoptable patron tags
+├── members/                # one {slug}.json per member — join = add a file here
 ├── badges/                 # member-supplied 88×31 PNG/GIF badges
 ├── src/
-│   ├── build.ts            # ring.json + templates → dist/
+│   ├── build.ts            # ring.json + members/*.json + templates → dist/
+│   ├── members.ts          # loads/validates one member per file, derives ring order
 │   ├── validate.ts         # PR validation (schema, charset, tags, badges, reachability)
 │   ├── check-links.ts      # weekly dead-link checker
 │   ├── allowlist.ts        # changed-file allowlist for non-maintainer PRs
@@ -95,7 +103,7 @@ this repo:
 ## Security model
 
 Untrusted contributions (member PRs) can only ever be *data* —
-`ring.json` and `badges/` — never code. See [`DECISIONS.md`](./DECISIONS.md)
+`members/` and `badges/` — never code. See [`DECISIONS.md`](./DECISIONS.md)
 for the full threat model and the CI controls that enforce it
 (changed-file allowlist, `pull_request`-only trigger with base-branch
 code run against PR data, CODEOWNERS, least-privilege workflow

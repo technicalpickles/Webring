@@ -3,7 +3,7 @@ import { escapeHtml } from "../escape.js";
 /**
  * Meta-refresh redirect stub. Works without JS, has a visible-link fallback,
  * and is kept out of search indexes. Redirect target is always a
- * schema-validated https:// member URL from merged ring.json — never
+ * schema-validated https:// member URL from the assembled ring — never
  * user-controlled at request time.
  */
 export function renderRedirect(targetUrl: string, targetName: string): string {

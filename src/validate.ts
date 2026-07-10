@@ -6,6 +6,7 @@ import addFormats from "ajv-formats";
 import sharp from "sharp";
 import type { Ring } from "./types.js";
 import { safeFetchText } from "./safe-fetch.js";
+import { loadMembers } from "./members.js";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
@@ -211,18 +212,26 @@ export async function warnMissingBacklinks(ring: Ring): Promise<string[]> {
 
 async function main(): Promise<void> {
   const raw = await readFile(path.join(ROOT, "ring.json"), "utf-8");
-  let ring: Ring;
+  let meta: { name: string; url: string };
   try {
-    ring = JSON.parse(raw);
+    meta = JSON.parse(raw);
   } catch (err) {
     console.error(`ring.json is not valid JSON: ${(err as Error).message}`);
     process.exit(1);
   }
 
+  const { members, issues: memberFileIssues } = await loadMembers();
+  if (memberFileIssues.length > 0) {
+    console.error(`members/ validation failed (${memberFileIssues.length} issue(s)):`);
+    for (const issue of memberFileIssues) console.error(`  - ${issue.message}`);
+    process.exit(1);
+  }
+
+  const ring: Ring = { name: meta.name, url: meta.url, members };
   const issues = await validateRing(ring);
 
   if (issues.length > 0) {
-    console.error(`ring.json validation failed (${issues.length} issue(s)):`);
+    console.error(`ring validation failed (${issues.length} issue(s)):`);
     for (const issue of issues) console.error(`  - ${issue.message}`);
     process.exit(1);
   }
@@ -242,7 +251,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`ring.json is valid (${ring.members.length} member(s)).`);
+  console.log(`ring is valid (${ring.members.length} member(s)).`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

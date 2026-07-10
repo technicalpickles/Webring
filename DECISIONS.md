@@ -146,3 +146,35 @@ of workflow step ordering, not anything enforced in code; and the
 changed-file allowlist skip condition matched GitHub's `author_association`
 (MEMBER/COLLABORATOR) rather than the specific two names in
 `.github/CODEOWNERS`, which is a looser bar than "maintainer."
+
+**D17. Membership storage: one file per member (`members/{slug}.json`)
+instead of one shared array in `ring.json`. Ring order derived from
+`joined` date + `slug` tiebreak instead of stored as array position.**
+*Considered:* (a) keep the single-array `ring.json` and ask contributors to
+rebase on conflict (status quo — this is what broke down in practice: every
+open join PR touched the same lines of the same array, so two concurrent
+PRs reliably conflicted with each other, not just with unrelated changes);
+(b) one file per member, but keep an explicit `members/_order.json` (or
+similar) listing slugs in sequence to preserve exact append order; (c) one
+file per member with order derived from git/file metadata (e.g. commit
+date) instead of a data field.
+*Why:* One file per member means a join PR only ever *adds* a file — it
+can never collide with another open join PR touching a different file, no
+rebasing required, and review is a smaller, more obviously-scoped diff.
+(b) was rejected because a shared order file is exactly the same
+single-point-of-contention problem in a different filename — every join PR
+would still need to edit it. (c) was rejected because git/filesystem
+metadata isn't stable input (rebase/squash/clone can all change it) and
+would make build output depend on repo history rather than repo content.
+Deriving order from `joined` (already a required, human-set field) plus
+`slug` as a tiebreaker is deterministic from content alone, matches the
+spirit of D5's "deterministic and diff-friendly" goal, and costs one
+visible tradeoff: same-day joins are ordered alphabetically by slug rather
+than by whichever PR happened to merge first. `ring.json` is kept, but
+now holds only the ring's own `name`/`url` — no longer members — and is
+no longer in the non-maintainer changed-file allowlist (§9.1) since there
+is no member-editable content left in it; `members/` replaces it in the
+allowlist and in CODEOWNERS-exempt data-only paths. This supersedes the
+storage/ordering mechanism described in D5, though D5's underlying
+premise — "membership = PR, CI validates before a human looks" — stands
+unchanged.
