@@ -4,7 +4,7 @@ import type { Ring } from "../types.js";
 
 const ring: Ring = {
   name: "Dead HTML Tag Society",
-  url: "https://ring.pickles.dev",
+  url: "https://deadhtml.pickles.dev",
   members: [
     {
       slug: "pickles",
