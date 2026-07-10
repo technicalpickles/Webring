@@ -1,0 +1,8 @@
+# Data-only contributions (ring.json, badges/) are reviewable by either
+# admin without a required-owner rule below. Everything that touches the
+# build, CI, or the curated tag list needs a maintainer's eyes.
+
+/src/               @technicalpickles @noizwaves
+/.github/           @technicalpickles @noizwaves
+/dead-tags.json     @technicalpickles @noizwaves
+/ring.schema.json   @technicalpickles @noizwaves

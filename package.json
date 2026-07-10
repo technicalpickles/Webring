@@ -1,0 +1,29 @@
+{
+  "name": "webring",
+  "version": "1.0.0",
+  "description": "Dead HTML Tag Society — a webring for personal sites",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsx src/build.ts",
+    "dev": "npm run build && npx serve dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "tsx src/validate.ts",
+    "check-allowlist": "tsx src/allowlist.ts",
+    "check-links": "tsx src/check-links.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "sharp": "^0.33.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
