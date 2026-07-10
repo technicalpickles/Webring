@@ -1,0 +1,105 @@
+name: Validate
+
+# pull_request only — NEVER pull_request_target. This trigger never has
+# access to secrets and always runs with a restricted, read-only default
+# GITHUB_TOKEN, even for a workflow file modified by the PR itself.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # First job: does this PR (from a non-maintainer) touch anything outside
+  # the data-only allowlist? Runs before anything else, and before any
+  # dependency install.
+  #
+  # Gated on the two names in .github/CODEOWNERS, not author_association —
+  # association values like MEMBER/COLLABORATOR describe repo access level,
+  # not maintainer status, so a collaborator who isn't a CODEOWNER would
+  # otherwise skip this gate too. Keep this list in sync with CODEOWNERS.
+  changed-files-allowlist:
+    if: >-
+      github.event.pull_request.user.login != 'technicalpickles' &&
+      github.event.pull_request.user.login != 'noizwaves'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout base branch (trusted code only)
+        uses: actions/checkout@v4 # v4.2.2
+        with:
+          ref: main
+      - name: Set up Node
+        uses: actions/setup-node@v4 # v4.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: List changed files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --paginate --jq '.[].filename' > /tmp/changed-files.txt
+          cat /tmp/changed-files.txt
+      - name: Enforce changed-file allowlist
+        run: npm run check-allowlist < /tmp/changed-files.txt
+
+  # Second job: schema/charset/tag/slug/badge/reachability validation.
+  # Always runs base-branch code (src/validate.ts et al. from `main`)
+  # against PR-supplied *data only* (ring.json + badges/, pulled in via a
+  # sparse checkout so nothing else from the PR ever lands on the runner).
+  # We never execute code from the PR.
+  validate:
+    needs: changed-files-allowlist
+    if: always() && (needs.changed-files-allowlist.result == 'success' || needs.changed-files-allowlist.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout base branch (trusted code)
+        uses: actions/checkout@v4 # v4.2.2
+        with:
+          ref: main
+
+      - name: Checkout PR data only (ring.json + badges/)
+        uses: actions/checkout@v4 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            /ring.json
+            /badges/
+          sparse-checkout-cone-mode: false
+          path: pr-data
+
+      - name: Overlay PR data onto trusted code
+        run: |
+          cp pr-data/ring.json ./ring.json
+          rm -rf ./badges
+          mkdir -p ./badges
+          if [ -d pr-data/badges ]; then cp -r pr-data/badges/. ./badges/; fi
+          rm -rf pr-data
+
+      - name: Set up Node
+        uses: actions/setup-node@v4 # v4.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate ring.json + badges/
+        run: npm run validate
+
+      - name: Build (smoke test)
+        run: npm run build
