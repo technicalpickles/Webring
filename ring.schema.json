@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://ring.pickles.dev/ring.schema.json",
+  "$id": "https://deadhtml.pickles.dev/ring.schema.json",
   "title": "Dead HTML Tag Society ring",
   "description": "Schema for ring.json, the source of truth for webring membership.",
   "type": "object",

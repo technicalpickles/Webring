@@ -2,7 +2,7 @@
 
 A webring for personal sites, in loving memory of `<blink>`.
 
-**Live at:** [ring.pickles.dev](https://ring.pickles.dev)
+**Live at:** [deadhtml.pickles.dev](https://deadhtml.pickles.dev)
 **Maintainers:** [@technicalpickles](https://github.com/technicalpickles) ·
 [@noizwaves](https://github.com/noizwaves)
 
@@ -84,7 +84,7 @@ this repo:
   `validate` status check, require review from Code Owners.
 - **Actions → General**: require approval for first-time contributors'
   workflow runs; set workflow default permissions to read-only.
-- **Pages**: source = GitHub Actions; custom domain `ring.pickles.dev`
+- **Pages**: source = GitHub Actions; custom domain `deadhtml.pickles.dev`
   with HTTPS enforced (the `CNAME` file in `dist/` sets the domain, but
   DNS + the HTTPS toggle are configured here).
 - **2FA/passkeys required** for both maintainer accounts.

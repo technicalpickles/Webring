@@ -1,6 +1,6 @@
 {
   "name": "Dead HTML Tag Society",
-  "url": "https://ring.pickles.dev",
+  "url": "https://deadhtml.pickles.dev",
   "members": [
     {
       "slug": "pickles",
@@ -20,12 +20,19 @@
       "joined": "2026-07-09"
     },
     {
+      "slug": "carpetelam",
+      "name": "carpetelam.github.io/applet",
+      "url": "https://carpetelam.github.io/applet",
+      "owner": "CarpeTelam",
+      "tag": "applet",
+      "joined": "2026-07-10"
+    },
+    {
       "slug": "kplawver",
       "name": "lawver.net",
       "url": "https://lawver.net",
       "owner": "kplawver",
       "tag": "noframes",
       "joined": "2026-07-10"
-    }
   ]
 }

@@ -14,14 +14,19 @@ concurrency:
 
 jobs:
   build:
+    # Forks get their own copy of this workflow and push events fire it in
+    # their repo too, surfacing as a check on any PR opened from that fork
+    # (checks are keyed by commit SHA, not repo). Skip outside the canonical
+    # repo so forks show green instead of failing on a missing Pages setup.
+    if: github.repository == 'technicalpickles/Webring'
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4 # v4.2.2
+        uses: actions/checkout@v7 # v4.2.2
       - name: Set up Node
-        uses: actions/setup-node@v4 # v4.1.0
+        uses: actions/setup-node@v6 # v4.1.0
         with:
           node-version: 24
           cache: npm
@@ -30,7 +35,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3 # v3.0.1
+        uses: actions/upload-pages-artifact@v5 # v3.0.1
         with:
           path: dist
 
@@ -46,4 +51,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # v4.0.5
+        uses: actions/deploy-pages@v5 # v4.0.5

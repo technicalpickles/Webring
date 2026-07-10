@@ -2,7 +2,7 @@
 
 A webring for personal sites, in loving memory of `<blink>`.
 
-**Domain:** `ring.pickles.dev` · **Repo:** `technicalpickles/webring` (public, MIT) · **Maintainers:** technicalpickles + noizwaves (co-admins from day one)
+**Domain:** `deadhtml.pickles.dev` · **Repo:** `technicalpickles/webring` (public, MIT) · **Maintainers:** technicalpickles + noizwaves (co-admins from day one)
 
 ## 1. Goals
 
@@ -31,7 +31,7 @@ ring.json ──(build script, GitHub Actions on merge to main)──► static 
 
 - **Source of truth:** `ring.json` at repo root, validated by `ring.schema.json`.
 - **Build:** small TypeScript script (Node 22+, run via `tsx`), no framework. Reads `ring.json` + HTML templates, emits `dist/`. Deployed via `actions/deploy-pages` on push to `main`.
-- **Domain:** `CNAME` file for `ring.pickles.dev`; DNS CNAME → `technicalpickles.github.io`. HTTPS enforced in Pages settings.
+- **Domain:** `CNAME` file for `deadhtml.pickles.dev`; DNS CNAME → `technicalpickles.github.io`. HTTPS enforced in Pages settings.
 - **No member-side JS, no runtime data fetches.** The only JS anywhere is ~5 inline lines on the hub's own `/random/` page (§5).
 
 ## 3. Data model
@@ -39,7 +39,7 @@ ring.json ──(build script, GitHub Actions on merge to main)──► static 
 ```json
 {
   "name": "Dead HTML Tag Society",
-  "url": "https://ring.pickles.dev",
+  "url": "https://deadhtml.pickles.dev",
   "members": [
     {
       "slug": "pickles",
@@ -79,10 +79,10 @@ Meta-refresh works without JS; the visible link is the fallback; `noindex` keeps
 
 ```html
 <p class="dhts">
-  <a href="https://ring.pickles.dev/pickles/prev/" aria-label="previous site in the Dead HTML Tag Society">←</a>
-  <a href="https://ring.pickles.dev/">Dead HTML Tag Society</a>
-  <a href="https://ring.pickles.dev/random/?from=pickles" aria-label="random site in the ring">🎲</a>
-  <a href="https://ring.pickles.dev/pickles/next/" aria-label="next site in the Dead HTML Tag Society">→</a>
+  <a href="https://deadhtml.pickles.dev/pickles/prev/" aria-label="previous site in the Dead HTML Tag Society">←</a>
+  <a href="https://deadhtml.pickles.dev/">Dead HTML Tag Society</a>
+  <a href="https://deadhtml.pickles.dev/random/?from=pickles" aria-label="random site in the ring">🎲</a>
+  <a href="https://deadhtml.pickles.dev/pickles/next/" aria-label="next site in the Dead HTML Tag Society">→</a>
 </p>
 ```
 
@@ -108,7 +108,7 @@ Hand-rolled retro HTML/CSS from a template — lean into the theme (a tasteful C
 
 1. Fork, append yourself to `ring.json` (picking an available patron tag), optionally add `badges/{slug}.png`, open a PR. Membership PRs may touch **only** `ring.json` and `badges/` (enforced, §9).
 2. CI validation on PR — see §9 for the security-relevant checks; functionally: schema + charset + unique slug + valid patron tag, site returns 200 over https, badge is 88×31 PNG/GIF ≤100 KB (re-encoded by CI).
-3. Soft check (warn, don't fail): member homepage links to `ring.pickles.dev`. Chicken-and-egg — redirects don't exist for them until merged; admins verify shortly after merge. The link-checker (§10) skips members with `joined` < 7 days ago.
+3. Soft check (warn, don't fail): member homepage links to `deadhtml.pickles.dev`. Chicken-and-egg — redirects don't exist for them until merged; admins verify shortly after merge. The link-checker (§10) skips members with `joined` < 7 days ago.
 4. Human review + merge by either admin → auto build/deploy → ring re-wired.
 5. Leaving = PR removing your entry. Emergency removal = admin revert, one commit.
 
@@ -148,7 +148,7 @@ Threat model: strangers send PRs; the hub serves assets that other people's site
 
 Weekly cron workflow (`workflow_dispatch` too, for testing):
 - GET each member URL (follow redirects, 2 retries w/ backoff).
-- Check response HTML contains `ring.pickles.dev` (string match; skip members joined <7 days).
+- Check response HTML contains `deadhtml.pickles.dev` (string match; skip members joined <7 days).
 - Failures → open/update a `dead-link` issue per member; auto-close on recovery. Removal is a human decision.
 - Permissions: `issues: write` only.
 
@@ -189,7 +189,7 @@ webring/
 
 ## 13. Acceptance criteria (v1 done when…)
 
-- [ ] Deploys to `ring.pickles.dev` with pickles.dev + noizwaves.com as members with patron tags.
+- [ ] Deploys to `deadhtml.pickles.dev` with pickles.dev + noizwaves.com as members with patron tags.
 - [ ] `/{slug}/next/` and `/{slug}/prev/` correct for both members, wrapping.
 - [ ] `/random/?from=slug` excludes the source site; works sans JS via noscript list.
 - [ ] Directory shows badges (incl. generated default), patron tags, per-member snippets, unclaimed-tag list.
@@ -227,7 +227,7 @@ Decisions already made, with alternatives considered and why they lost. **Do not
 *Considered:* build-time rotation (no JS at all), no random.
 *Why:* True randomness needs JS somewhere; confining it to the hub keeps member sites at zero JS. `?from` never becomes a redirect target → no open-redirect. `<noscript>` degrades to the member list. Random excludes the current site because bouncing back to yourself is a bad hop.
 
-**D7. Domain: `ring.pickles.dev`.**
+**D7. Domain: `deadhtml.pickles.dev`.**
 *Considered:* neutral new domain, bare github.io.
 *Why:* Free (existing domain + DNS CNAME), memorable, no new renewal to babysit. A neutral domain can come later without breaking anything except embedded links (acceptable at current scale).
 
@@ -249,6 +249,6 @@ Decisions already made, with alternatives considered and why they lost. **Do not
 **D13. Tooling: Node 22+/npm/`tsx`/vitest, CI-only deps (`ajv`, image lib), zero runtime deps in output. License: MIT.**
 *Why:* Low contributor friction (npm over pnpm), boring and durable. MIT is clean because the widget was cut and nothing is vendored from onionring.js (which is CNPL).
 
-**D14. Link-checker: weekly, string-match for `ring.pickles.dev`, 7-day grace for new members, opens/auto-closes issues, removal stays human.**
+**D14. Link-checker: weekly, string-match for `deadhtml.pickles.dev`, 7-day grace for new members, opens/auto-closes issues, removal stays human.**
 *Why:* Grace period solves the join-time chicken-and-egg (can't link to redirects that don't exist yet); auto-removal is too hostile for a cozy ring.
 

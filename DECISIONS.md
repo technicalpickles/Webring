@@ -53,7 +53,7 @@ member sites at zero JS. `?from` never becomes a redirect target → no
 open-redirect. `<noscript>` degrades to the member list. Random excludes
 the current site because bouncing back to yourself is a bad hop.
 
-**D7. Domain: `ring.pickles.dev`.**
+**D7. Domain: `deadhtml.pickles.dev`.**
 *Considered:* neutral new domain, bare github.io.
 *Why:* Free (existing domain + DNS CNAME), memorable, no new renewal to
 babysit. A neutral domain can come later without breaking anything except
@@ -93,7 +93,7 @@ lib), zero runtime deps in output. License: MIT.**
 is clean because the widget was cut and nothing is vendored from
 onionring.js (which is CNPL).
 
-**D14. Link-checker: weekly, string-match for `ring.pickles.dev`, 7-day
+**D14. Link-checker: weekly, string-match for `deadhtml.pickles.dev`, 7-day
 grace for new members, opens/auto-closes issues, removal stays human.**
 *Why:* Grace period solves the join-time chicken-and-egg (can't link to
 redirects that don't exist yet); auto-removal is too hostile for a cozy
