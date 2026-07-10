@@ -26,6 +26,14 @@
       "owner": "CarpeTelam",
       "tag": "applet",
       "joined": "2026-07-10"
+    },
+    {
+      "slug": "kplawver",
+      "name": "lawver.net",
+      "url": "https://lawver.net",
+      "owner": "kplawver",
+      "tag": "noframes",
+      "joined": "2026-07-10"
     }
   ]
 }
