@@ -60,10 +60,19 @@ jobs:
         run: npm run check-allowlist < /tmp/changed-files.txt
 
   # Second job: schema/charset/tag/slug/badge/reachability validation.
-  # Always runs base-branch code (src/validate.ts et al. from `main`)
-  # against PR-supplied *data only* (ring.json + members/ + badges/, pulled
-  # in via a sparse checkout so nothing else from the PR ever lands on the
-  # runner). We never execute code from the PR.
+  # For strangers' PRs, always runs base-branch code (src/validate.ts et al.
+  # from `main`) against PR-supplied *data only* (ring.json + members/ +
+  # badges/, pulled in via a sparse checkout so nothing else from the PR
+  # ever lands on the runner) — we never execute a stranger's code.
+  #
+  # PRs from the same trusted authors exempted from the allowlist gate above
+  # (the two CODEOWNERS + dependabot[bot]) run their own PR-head code
+  # instead: those authors can already change any file — including this
+  # workflow, package.json, or src/validate.ts itself — and have that land
+  # on `main` the moment the PR merges, so gating *this* job on base-branch
+  # code buys no real protection for them, while it does block legitimate
+  # changes to the validation logic itself (e.g. a schema/pipeline
+  # migration) from ever going green. See D18 in DECISIONS.md.
   validate:
     needs: changed-files-allowlist
     if: always() && (needs.changed-files-allowlist.result == 'success' || needs.changed-files-allowlist.result == 'skipped')
@@ -71,12 +80,30 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Determine trust level
+        id: trust
+        run: |
+          case "${{ github.event.pull_request.user.login }}" in
+            technicalpickles|noizwaves|dependabot\[bot\])
+              echo "trusted=true" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "trusted=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Checkout PR head (trusted author — runs the PR's own code)
+        if: steps.trust.outputs.trusted == 'true'
+        uses: actions/checkout@v7 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Checkout base branch (trusted code)
+        if: steps.trust.outputs.trusted != 'true'
         uses: actions/checkout@v7 # v4.2.2
         with:
           ref: main
 
       - name: Checkout PR data only (ring.json + members/ + badges/)
+        if: steps.trust.outputs.trusted != 'true'
         uses: actions/checkout@v7 # v4.2.2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -89,6 +116,7 @@ jobs:
           path: pr-data
 
       - name: Overlay PR data onto trusted code
+        if: steps.trust.outputs.trusted != 'true'
         run: |
           cp pr-data/ring.json ./ring.json
           rm -rf ./members

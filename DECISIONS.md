@@ -178,3 +178,18 @@ allowlist and in CODEOWNERS-exempt data-only paths. This supersedes the
 storage/ordering mechanism described in D5, though D5's underlying
 premise — "membership = PR, CI validates before a human looks" — stands
 unchanged.
+
+**D18. The `validate` CI job runs the PR's own code (instead of
+base-branch code overlaid with PR data, per D11) when the PR author is one
+of the two CODEOWNERS or `dependabot[bot]`.**
+*Why:* D11's base-code-only rule exists to stop a stranger's data-only PR
+from smuggling in malicious validation logic. It bought nothing extra for
+the two trusted authors — they can already edit any file, including this
+workflow itself, and have it land on `main` the moment the PR merges — but
+it did mean a legitimate change to the validation pipeline itself (like
+D17's `ring.json`/`members/` migration) could never pass CI, since the
+job would always check the PR's new data against `main`'s pre-migration
+code. Gating the checkout strategy on the same trust list already used by
+the `changed-files-allowlist` job (§9.1) closes that gap without loosening
+anything for stranger-submitted PRs, which still only ever run against
+base-branch code.
