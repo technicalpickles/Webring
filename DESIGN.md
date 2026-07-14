@@ -19,46 +19,56 @@ A webring for personal sites, in loving memory of `<blink>`.
 ## 2. Architecture
 
 ```
-ring.json ──(build script, GitHub Actions on merge to main)──► static site (dist/)
-                                                               ├── index.html         home + directory + join snippet
-                                                               ├── 404.html           links back to directory
-                                                               ├── badges/*.png|gif|svg
-                                                               ├── random/index.html  random-site hop
-                                                               └── {slug}/
-                                                                   ├── next/index.html
-                                                                   └── prev/index.html
+ring.json + members/*.json ──(build script, GitHub Actions on merge to main)──► static site (dist/)
+                                                                                ├── index.html         home + directory + join snippet
+                                                                                ├── 404.html           links back to directory
+                                                                                ├── badges/*.png|gif|svg
+                                                                                ├── random/index.html  random-site hop
+                                                                                └── {slug}/
+                                                                                    ├── next/index.html
+                                                                                    └── prev/index.html
 ```
 
-- **Source of truth:** `ring.json` at repo root, validated by `ring.schema.json`.
-- **Build:** small TypeScript script (Node 22+, run via `tsx`), no framework. Reads `ring.json` + HTML templates, emits `dist/`. Deployed via `actions/deploy-pages` on push to `main`.
+- **Source of truth:** `ring.json` (ring name + url) plus one file per member under `members/{slug}.json`, together validated by `ring.schema.json` against the assembled ring. Splitting membership into one file per member (rather than one shared array) is what lets concurrent join PRs merge without conflicting with each other — see D17.
+- **Build:** small TypeScript script (Node 22+, run via `tsx`), no framework. Reads `ring.json` + `members/*.json` + HTML templates, emits `dist/`. Deployed via `actions/deploy-pages` on push to `main`.
 - **Domain:** `CNAME` file for `deadhtml.pickles.dev`; DNS CNAME → `technicalpickles.github.io`. HTTPS enforced in Pages settings.
 - **No member-side JS, no runtime data fetches.** The only JS anywhere is ~5 inline lines on the hub's own `/random/` page (§5).
 
 ## 3. Data model
 
+`ring.json` holds just the ring's own identity:
+
 ```json
 {
   "name": "Dead HTML Tag Society",
-  "url": "https://deadhtml.pickles.dev",
-  "members": [
-    {
-      "slug": "pickles",
-      "name": "pickles.dev",
-      "url": "https://pickles.dev",
-      "owner": "technicalpickles",
-      "tag": "blink",
-      "badge": "badges/pickles.png",
-      "rss": "https://pickles.dev/feed.xml",
-      "joined": "2026-07-09"
-    }
-  ]
+  "url": "https://deadhtml.pickles.dev"
 }
 ```
 
-- `slug`: unique, `^[a-z0-9-]{1,32}$`, used in redirect paths.
+Each member is a separate file, `members/{slug}.json`, whose `slug` field
+must equal the filename:
+
+```json
+{
+  "slug": "pickles",
+  "name": "pickles.dev",
+  "url": "https://pickles.dev",
+  "owner": "technicalpickles",
+  "tag": "blink",
+  "badge": "badges/pickles.png",
+  "rss": "https://pickles.dev/feed.xml",
+  "joined": "2026-07-09"
+}
+```
+
+The build assembles `ring.json` + every `members/*.json` into one in-memory
+`Ring` object (`{ name, url, members }`), which is what `ring.schema.json`
+validates and what the rest of the build operates on.
+
+- `slug`: unique, `^[a-z0-9-]{1,32}$`, used in redirect paths and must match its filename.
 - `tag` (**patron tag**, required): each member adopts a dead HTML tag, validated against `dead-tags.json` — a curated list in the repo (`blink`, `marquee`, `center`, `font`, `big`, `strike`, `tt`, `acronym`, `frameset`, `frame`, `applet`, `dir`, `basefont`, `isindex`, `plaintext`, `xmp`, `keygen`, `menuitem`, ...). Duplicates allowed once all tags are claimed; directory shows it as `<blink>` next to the member's name.
 - `name`/`owner`: strict charset (printable, no `<>&"'`) — belt-and-suspenders even though all rendering is build-time escaped.
-- Ring order = array order; new members append. Wrap-around at the ends.
+- Ring order (next/prev) is *derived*, not stored: sorted by `joined` date, then `slug` to break same-day ties. There's no shared array or order file for join PRs to fight over — see D17.
 - `badge`/`rss` optional. Badges: 88×31 px, PNG or GIF only from members (no member-supplied SVG — SVG can carry script), ≤100 KB.
 
 ## 4. Static redirects & member snippet
@@ -106,7 +116,7 @@ Hand-rolled retro HTML/CSS from a template — lean into the theme (a tasteful C
 
 ## 7. Membership flow
 
-1. Fork, append yourself to `ring.json` (picking an available patron tag), optionally add `badges/{slug}.png`, open a PR. Membership PRs may touch **only** `ring.json` and `badges/` (enforced, §9).
+1. Fork, add `members/{slug}.json` (picking an available patron tag), optionally add `badges/{slug}.png`, open a PR. Membership PRs may touch **only** `members/` and `badges/` (enforced, §9) — one member per file means a join PR only ever adds a file, so it can't conflict with another open join PR.
 2. CI validation on PR — see §9 for the security-relevant checks; functionally: schema + charset + unique slug + valid patron tag, site returns 200 over https, badge is 88×31 PNG/GIF ≤100 KB (re-encoded by CI).
 3. Soft check (warn, don't fail): member homepage links to `deadhtml.pickles.dev`. Chicken-and-egg — redirects don't exist for them until merged; admins verify shortly after merge. The link-checker (§10) skips members with `joined` < 7 days ago.
 4. Human review + merge by either admin → auto build/deploy → ring re-wired.
@@ -124,7 +134,7 @@ Hand-rolled retro HTML/CSS from a template — lean into the theme (a tasteful C
 Threat model: strangers send PRs; the hub serves assets that other people's sites link to. Ordered by blast radius:
 
 **9.1 CI / supply-chain (the "bitcoin miner in my Actions" scenario).**
-- Changed-file allowlist: a first CI job diffs the PR; non-maintainer PRs touching anything outside `ring.json` + `badges/` fail immediately.
+- Changed-file allowlist: a first CI job diffs the PR; non-maintainer PRs touching anything outside `members/` + `badges/` fail immediately. `ring.json` (the ring's own name/url) requires a maintainer, same as the schema and CI itself.
 - Validation always runs **base-branch code against PR data**. Never check out and execute PR code. Use `pull_request` trigger only — never `pull_request_target` with a head checkout.
 - Repo settings: require approval for first-time contributors' workflow runs; default `GITHUB_TOKEN` read-only; per-workflow `permissions:` blocks (link-checker gets `issues: write`, deploy gets Pages perms, validation gets nothing).
 - Pin all third-party actions to full commit SHAs.
@@ -133,7 +143,7 @@ Threat model: strangers send PRs; the hub serves assets that other people's site
 
 **9.2 Injection via ring data.**
 - All HTML generation escapes member-provided strings at build time (single escape helper, tested). Schema charset restrictions are the second layer.
-- Redirect targets come only from schema-validated `https://` member URLs in merged `ring.json` — no user-controlled redirect exists. `/random/?from=` only filters.
+- Redirect targets come only from schema-validated `https://` member URLs in the assembled ring — no user-controlled redirect exists. `/random/?from=` only filters.
 
 **9.3 Malicious/compromised member sites.**
 - Human review to join; content policy; documented one-revert removal path.
@@ -156,12 +166,14 @@ Weekly cron workflow (`workflow_dispatch` too, for testing):
 
 ```
 webring/
-├── ring.json
+├── ring.json               # ring name + url only (maintainer-owned)
 ├── ring.schema.json
 ├── dead-tags.json
+├── members/                # one {slug}.json per member
 ├── badges/
 ├── src/
-│   ├── build.ts            # ring.json + templates → dist/
+│   ├── build.ts            # ring.json + members/*.json + templates → dist/
+│   ├── members.ts          # loads/validates one member per file, derives ring order
 │   ├── escape.ts           # the one HTML-escape helper
 │   └── templates/          # index, redirect, random, 404
 ├── dist/                   # gitignored, built in CI

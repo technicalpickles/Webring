@@ -4,6 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 import type { Member, Ring } from "./types.js";
 import { neighbors } from "./ring-order.js";
+import { loadMembers } from "./members.js";
 import { renderIndex } from "./templates/index.js";
 import { renderRedirect } from "./templates/redirect.js";
 import { renderRandom } from "./templates/random.js";
@@ -16,7 +17,16 @@ const DIST = path.join(ROOT, "dist");
 
 async function loadRing(): Promise<Ring> {
   const raw = await readFile(path.join(ROOT, "ring.json"), "utf-8");
-  return JSON.parse(raw) as Ring;
+  const meta = JSON.parse(raw) as { name: string; url: string };
+
+  const { members, issues } = await loadMembers();
+  if (issues.length > 0) {
+    console.error(`Refusing to build: members/ failed to load (${issues.length} issue(s)):`);
+    for (const issue of issues) console.error(`  - ${issue.message}`);
+    process.exit(1);
+  }
+
+  return { name: meta.name, url: meta.url, members };
 }
 
 async function loadDeadTags(): Promise<string[]> {

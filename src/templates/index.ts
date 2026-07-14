@@ -60,8 +60,8 @@ ${members}
 
 <h2>How to join</h2>
 <p>
-  Fork this repo, add yourself to <code>ring.json</code>, pick an unclaimed
-  patron tag, and open a pull request. See
+  Fork this repo, add a <code>members/{your-slug}.json</code> file, pick an
+  unclaimed patron tag, and open a pull request. See
   <a href="https://github.com/technicalpickles/webring/blob/main/JOINING.md">JOINING.md</a>
   for the full rules.
 </p>

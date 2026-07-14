@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Ring, Member } from "./types.js";
 import { safeFetchText } from "./safe-fetch.js";
+import { loadMembers } from "./members.js";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const GRACE_PERIOD_DAYS = 7;
@@ -159,7 +160,14 @@ export async function checkMember(member: Member, ringHost: string): Promise<{ o
 
 async function main(): Promise<void> {
   const raw = await readFile(path.join(ROOT, "ring.json"), "utf-8");
-  const ring: Ring = JSON.parse(raw);
+  const meta: { name: string; url: string } = JSON.parse(raw);
+  const { members, issues: memberFileIssues } = await loadMembers();
+  if (memberFileIssues.length > 0) {
+    console.error(`members/ failed to load (${memberFileIssues.length} issue(s)):`);
+    for (const issue of memberFileIssues) console.error(`  - ${issue.message}`);
+    process.exit(1);
+  }
+  const ring: Ring = { name: meta.name, url: meta.url, members };
   const ringHost = new URL(ring.url).host;
 
   const issues = await listDeadLinkIssues();

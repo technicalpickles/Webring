@@ -28,9 +28,10 @@ request, not a form.
 
 ### 1. Fork this repo
 
-### 2. Add yourself to `ring.json`
+### 2. Add yourself as a file under `members/`
 
-Append an entry to the `members` array:
+Create `members/{yourname}.json` (the filename, minus `.json`, must equal
+your `slug`):
 
 ```json
 {
@@ -44,7 +45,7 @@ Append an entry to the `members` array:
 ```
 
 - `slug`: lowercase letters, numbers, hyphens only. Used in your redirect
-  URLs (`deadhtml.pickles.dev/{slug}/next/`).
+  URLs (`deadhtml.pickles.dev/{slug}/next/`) and must match the filename.
 - `name`: how your site is displayed in the directory.
 - `url`: your homepage, `https://` only.
 - `owner`: your name or handle.
@@ -56,8 +57,14 @@ Append an entry to the `members` array:
 - `rss` (optional): your feed URL, `https://` only.
 - `joined`: today's date, `YYYY-MM-DD`.
 
-Membership PRs from non-maintainers may only touch `ring.json` and files
-under `badges/` — anything else will fail CI automatically.
+One file per member means your PR only ever adds a new file — it can't
+conflict with anyone else's join PR the way editing a shared list would.
+Ring order (next/prev) isn't the order members were added in file terms;
+it's derived deterministically from `joined` (then `slug` to break ties on
+the same day), so it doesn't depend on merge order either.
+
+Membership PRs from non-maintainers may only touch files under `members/`
+and `badges/` — anything else will fail CI automatically.
 
 ### 3. Add the snippet to your site
 
@@ -90,8 +97,8 @@ badge with your name on it.
 ### 5. Open a pull request
 
 CI checks:
-- `ring.json` still matches the schema, your slug is unique, your tag is
-  valid.
+- Your `members/{slug}.json` matches the schema, its slug matches the
+  filename and is unique, and your tag is valid.
 - Your site returns `200` over `https://`.
 - Your badge (if any) is a valid 88×31 PNG/GIF under 100 KB.
 - (Non-blocking) whether your homepage already links back to the ring —
@@ -104,5 +111,5 @@ anything else.
 
 ## Leaving
 
-Open a PR removing your entry from `ring.json`. If something urgent comes
-up, ping an admin for an emergency removal (a one-commit revert).
+Open a PR deleting your `members/{slug}.json` file. If something urgent
+comes up, ping an admin for an emergency removal (a one-commit revert).

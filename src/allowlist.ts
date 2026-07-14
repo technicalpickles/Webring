@@ -1,10 +1,11 @@
 /**
- * Non-maintainer PRs may only touch ring.json and files under badges/.
- * Everything else (src/, .github/, schema, dead-tags.json, ...) requires
- * a maintainer, enforced by this check plus CODEOWNERS + branch protection.
+ * Non-maintainer PRs may only touch files under members/ and badges/.
+ * Everything else (src/, .github/, schema, dead-tags.json, ring.json, ...)
+ * requires a maintainer, enforced by this check plus CODEOWNERS + branch
+ * protection.
  */
-const ALLOWED_PATHS = ["ring.json"];
-const ALLOWED_PREFIXES = ["badges/"];
+const ALLOWED_PATHS: string[] = [];
+const ALLOWED_PREFIXES = ["members/", "badges/"];
 
 export function isAllowedChange(filePath: string): boolean {
   if (ALLOWED_PATHS.includes(filePath)) return true;
@@ -32,7 +33,7 @@ async function main(): Promise<void> {
 
   const result = checkChangedFiles(files);
   if (!result.allowed) {
-    console.error("This PR modifies files outside the ring.json + badges/ allowlist:");
+    console.error("This PR modifies files outside the members/ + badges/ allowlist:");
     for (const f of result.disallowedFiles) console.error(`  - ${f}`);
     console.error("Only a maintainer can merge changes outside that allowlist.");
     process.exit(1);
