@@ -18,11 +18,11 @@
     "check-links": "tsx src/check-links.ts"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "sharp": "^0.35.3",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }
